@@ -53,20 +53,6 @@ const Groups = {
     document.getElementById('print-btn').addEventListener('click', () => this.print());
     document.getElementById('clear-btn').addEventListener('click', () => this.clearAll());
 
-    // export dropdown
-    const dd = document.getElementById('export-dropdown');
-    document.getElementById('export-trigger').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dd.classList.toggle('open');
-    });
-    document.addEventListener('click', () => dd.classList.remove('open'));
-    dd.querySelectorAll('[data-export]').forEach(b => {
-      b.addEventListener('click', (e) => {
-        dd.classList.remove('open');
-        this.exportAs(b.dataset.export);
-      });
-    });
-
     this.refreshFromSettings();
     Settings.onChange(() => this.refreshFromSettings());
   },
@@ -188,18 +174,26 @@ const Groups = {
   },
 
   computeAssignment(members, groupCount, opts) {
-    const attempts = 60;
+    const attempts = 80;
+    // build clusters from "together" rules
+    const clusters = (typeof Rules !== 'undefined')
+      ? Rules.buildTogetherClusters(members)
+      : members.map(m => [m]);
+
     let best = null;
     let bestScore = -Infinity;
     for (let a = 0; a < attempts; a++) {
       const groups = Array.from({ length: groupCount }, () => []);
-      const shuffled = shuffleArr(members.slice());
-      for (const m of shuffled) {
+      // shuffle clusters; place each as a unit in the smallest group
+      const shuffled = shuffleArr(clusters.slice());
+      // larger clusters first to improve balance
+      shuffled.sort((x, y) => y.length - x.length);
+      for (const cluster of shuffled) {
         const min = Math.min(...groups.map(g => g.length));
         const cand = [];
         groups.forEach((g, i) => { if (g.length === min) cand.push(i); });
         const gi = cand[Math.floor(Math.random() * cand.length)];
-        groups[gi].push(m);
+        for (const m of cluster) groups[gi].push(m);
       }
       const score = this.scoreGroups(groups, opts);
       if (score > bestScore) {
@@ -213,6 +207,7 @@ const Groups = {
 
   scoreGroups(groups, opts) {
     let score = 0;
+    // avoid-last
     if (opts.avoidLast && this.lastGroups && this.lastGroups.length > 0) {
       const lastMap = new Map();
       this.lastGroups.forEach((g, i) => g.forEach(id => lastMap.set(id, i)));
@@ -227,6 +222,15 @@ const Groups = {
         }
       }
     }
+    // rule penalties
+    if (typeof Rules !== 'undefined') {
+      score += Rules.separatePenalty(groups);
+      score += Rules.togetherPenalty(groups);
+    }
+    // size imbalance penalty (small)
+    const sizes = groups.map(g => g.length);
+    const range = Math.max(...sizes) - Math.min(...sizes);
+    if (range > 1) score -= (range - 1) * 3;
     return score;
   },
 
@@ -260,94 +264,6 @@ const Groups = {
 
   print() {
     window.print();
-  },
-
-  async exportAs(format) {
-    const groups = this.getCurrentGroups();
-    if (groups.every(g => g.length === 0)) {
-      alert('まだグループに誰も入っていません。');
-      return;
-    }
-    if (format === 'json') return this.exportJSON(groups);
-    if (format === 'jpeg') return this.exportImage('jpeg');
-    if (format === 'pdf') return this.exportPDF();
-  },
-
-  exportJSON(groups) {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      groups: groups.map((g, i) => ({
-        name: this.groupNames[i] || `グループ${i + 1}`,
-        members: g.map(m => m.name),
-      })),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    this.downloadBlob(blob, `groups-${dateStamp()}.json`);
-    Toast.show('JSONを書き出しました');
-  },
-
-  async exportImage(format) {
-    if (typeof html2canvas === 'undefined') {
-      alert('画像書き出しライブラリの読み込みに失敗しました。ネットワークを確認してください。');
-      return;
-    }
-    const target = document.getElementById('groups-area');
-    Toast.show('画像を作成中...', 3000);
-    try {
-      const canvas = await html2canvas(target, {
-        backgroundColor: getComputedStyle(document.body).backgroundColor || '#fff',
-        scale: 2,
-      });
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        this.downloadBlob(blob, `groups-${dateStamp()}.jpg`);
-        Toast.show('JPEGを書き出しました');
-      }, 'image/jpeg', 0.92);
-    } catch (e) {
-      alert('画像化に失敗しました: ' + e.message);
-    }
-  },
-
-  async exportPDF() {
-    if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-      alert('PDF書き出しライブラリの読み込みに失敗しました。ネットワークを確認してください。');
-      return;
-    }
-    const target = document.getElementById('groups-area');
-    Toast.show('PDFを作成中...', 3000);
-    try {
-      const canvas = await html2canvas(target, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-      });
-      const img = canvas.toDataURL('image/jpeg', 0.92);
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: canvas.width > canvas.height ? 'landscape' : 'portrait', unit: 'pt', format: 'a4' });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-      const maxW = pageW - margin * 2;
-      const maxH = pageH - margin * 2;
-      const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
-      const w = canvas.width * ratio;
-      const h = canvas.height * ratio;
-      pdf.addImage(img, 'JPEG', (pageW - w) / 2, (pageH - h) / 2, w, h);
-      pdf.save(`groups-${dateStamp()}.pdf`);
-      Toast.show('PDFを書き出しました');
-    } catch (e) {
-      alert('PDF化に失敗しました: ' + e.message);
-    }
-  },
-
-  downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
   },
 
   // ============ restore from history ============
@@ -610,8 +526,4 @@ function shuffleArr(arr) {
   return a;
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function dateStamp() {
-  const d = new Date();
-  const pad = (n) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-}
+// dateStamp is provided by export.js

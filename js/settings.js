@@ -5,14 +5,59 @@ const Settings = {
   currentTheme: 'orange',
 
   init() {
-    // load + apply theme first
+    // load + apply theme/font first
     this.currentTheme = Storage.loadTheme();
+    this.currentFont = Storage.loadFont();
     applyTheme(this.currentTheme);
+    applyFont(this.currentFont);
 
     this.members = Storage.loadMembers();
+    this.renderThemeAndFontSelects();
     this.renderThemes();
     this.bindMemberEvents();
     this.renderMembers();
+  },
+
+  renderThemeAndFontSelects() {
+    const tsel = document.getElementById('theme-select');
+    tsel.innerHTML = '';
+    for (const t of THEMES) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = `${t.emoji} ${t.name}`;
+      if (t.id === this.currentTheme) opt.selected = true;
+      tsel.appendChild(opt);
+    }
+    tsel.addEventListener('change', () => this.setTheme(tsel.value));
+
+    const fsel = document.getElementById('font-select');
+    fsel.innerHTML = '';
+    for (const f of FONTS) {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.name;
+      opt.style.fontFamily = f.stack;
+      if (f.id === this.currentFont) opt.selected = true;
+      fsel.appendChild(opt);
+    }
+    fsel.addEventListener('change', () => this.setFont(fsel.value));
+  },
+
+  setTheme(id) {
+    this.currentTheme = id;
+    Storage.saveTheme(id);
+    applyTheme(id);
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme === id));
+    const sel = document.getElementById('theme-select');
+    if (sel.value !== id) sel.value = id;
+  },
+
+  setFont(id) {
+    this.currentFont = id;
+    Storage.saveFont(id);
+    applyFont(id);
+    const sel = document.getElementById('font-select');
+    if (sel.value !== id) sel.value = id;
   },
 
   renderThemes() {
@@ -31,12 +76,7 @@ const Settings = {
         </div>
         <div class="theme-name">${t.name}</div>
       `;
-      card.addEventListener('click', () => {
-        this.currentTheme = t.id;
-        Storage.saveTheme(t.id);
-        applyTheme(t.id);
-        document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme === t.id));
-      });
+      card.addEventListener('click', () => this.setTheme(t.id));
       grid.appendChild(card);
     }
   },

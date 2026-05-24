@@ -3,7 +3,9 @@ const Storage = {
   KEY_LAST: 'gd_last_groups',
   KEY_GROUP_NAMES: 'gd_group_names',
   KEY_THEME: 'gd_theme',
+  KEY_FONT: 'gd_font',
   KEY_HISTORY: 'gd_history',
+  KEY_RULES: 'gd_rules',
 
   loadMembers() {
     try {
@@ -48,11 +50,37 @@ const Storage = {
   },
 
   loadTheme() {
-    return localStorage.getItem(this.KEY_THEME) || 'orange';
+    return localStorage.getItem(this.KEY_THEME) || 'sky';
   },
 
   saveTheme(id) {
     localStorage.setItem(this.KEY_THEME, id);
+  },
+
+  loadFont() {
+    return localStorage.getItem(this.KEY_FONT) || 'default';
+  },
+
+  saveFont(id) {
+    localStorage.setItem(this.KEY_FONT, id);
+  },
+
+  loadRules() {
+    try {
+      const raw = localStorage.getItem(this.KEY_RULES);
+      if (!raw) return { separate: [], together: [] };
+      const obj = JSON.parse(raw);
+      return {
+        separate: Array.isArray(obj.separate) ? obj.separate : [],
+        together: Array.isArray(obj.together) ? obj.together : [],
+      };
+    } catch (e) {
+      return { separate: [], together: [] };
+    }
+  },
+
+  saveRules(rules) {
+    localStorage.setItem(this.KEY_RULES, JSON.stringify(rules));
   },
 
   loadHistory() {

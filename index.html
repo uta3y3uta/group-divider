@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>グループ分け</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="theme-orange">
+<body class="theme-sky font-default">
 <header>
   <h1>👥 グループ分け</h1>
   <nav class="tabs">
@@ -56,6 +59,41 @@
       </div>
     </div>
 
+    <!-- ルール -->
+    <details class="card pop rules-card" id="rules-card">
+      <summary class="rules-summary">
+        <span>📋 ルール <span class="muted" id="rules-count">0件</span></span>
+        <span class="chevron">▾</span>
+      </summary>
+      <div class="rules-body">
+        <div class="rule-block">
+          <h3 class="sub">🚫 別グループにする</h3>
+          <p class="hint-sm">誰と誰を別グループにするか決めます</p>
+          <div class="rule-add">
+            <select class="rule-select" id="separate-a"></select>
+            <span class="rule-sep">↔</span>
+            <select class="rule-select" id="separate-b"></select>
+            <button class="primary rule-add-btn" data-kind="separate">追加</button>
+          </div>
+          <ul class="rule-list" id="separate-list"></ul>
+        </div>
+
+        <hr class="soft">
+
+        <div class="rule-block">
+          <h3 class="sub">🤝 同じグループにする</h3>
+          <p class="hint-sm">誰と誰を同じグループにするか決めます</p>
+          <div class="rule-add">
+            <select class="rule-select" id="together-a"></select>
+            <span class="rule-sep">＝</span>
+            <select class="rule-select" id="together-b"></select>
+            <button class="primary rule-add-btn" data-kind="together">追加</button>
+          </div>
+          <ul class="rule-list" id="together-list"></ul>
+        </div>
+      </div>
+    </details>
+
     <div class="workspace">
       <div class="card pop pool-card">
         <div class="section-head">
@@ -75,22 +113,21 @@
       <button id="decide-btn" class="decide-btn">✅ この席に決定</button>
       <button id="print-btn" class="ghost">🖨 この席を印刷</button>
       <button id="clear-btn" class="ghost">🗑 クリア</button>
-      <div class="dropdown" id="export-dropdown">
-        <button class="dropdown-trigger ghost" id="export-trigger">📤 書き出し ▾</button>
-        <div class="dropdown-menu">
-          <button data-export="json">JSON</button>
-          <button data-export="jpeg">JPEG</button>
-          <button data-export="pdf">PDF</button>
-        </div>
-      </div>
     </div>
   </section>
 
   <!-- ============ 設定 ============ -->
   <section id="settings" class="tab-panel">
     <div class="card pop">
-      <h2>🎨 テーマ</h2>
-      <p class="hint">お好みの配色を選んでください。</p>
+      <h2>🎨 表示設定</h2>
+      <div class="display-row">
+        <label class="display-label">テーマ：</label>
+        <select id="theme-select" class="display-select"></select>
+      </div>
+      <div class="display-row">
+        <label class="display-label">フォント：</label>
+        <select id="font-select" class="display-select"></select>
+      </div>
       <div class="theme-grid" id="theme-grid"></div>
     </div>
 
@@ -166,7 +203,7 @@
         <h2>🕘 履歴</h2>
         <button id="clear-history-btn" class="ghost danger">全削除</button>
       </div>
-      <p class="hint">「この席に決定」したグループ分けを保存します。<br>カードをタップで詳細表示、「復元」で現在の配置に戻せます。</p>
+      <p class="hint">「この席に決定」したグループ分けを保存します。<br>カードをタップで詳細表示。「復元」で現在の配置に戻せます。「書き出し」でJSON/JPEG/PDF出力できます。</p>
       <div id="history-list" class="history-list"></div>
     </div>
   </section>
@@ -176,17 +213,19 @@
   <small>💾 データはこのブラウザ内に保存されます</small>
 </footer>
 
-<!-- Toast -->
 <div id="toast" class="toast"></div>
+<div id="export-stage" class="export-stage"></div>
 
-<!-- libs (async) -->
 <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script src="js/themes.js"></script>
+<script src="js/fonts.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/export.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/rules.js"></script>
 <script src="js/groups.js"></script>
 <script src="js/history.js"></script>
 <script src="js/app.js"></script>

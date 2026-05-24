@@ -4,6 +4,10 @@ const History = {
   init() {
     this.entries = Storage.loadHistory();
     document.getElementById('clear-history-btn').addEventListener('click', () => this.clearAll());
+    // close any open dropdowns on outside click
+    document.addEventListener('click', () => {
+      document.querySelectorAll('#history .dropdown.open').forEach(d => d.classList.remove('open'));
+    });
     this.render();
   },
 
@@ -32,6 +36,14 @@ const History = {
     const d = new Date(iso);
     const pad = (n) => n.toString().padStart(2, '0');
     return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  },
+
+  exportEntry(entry, format) {
+    const arrangement = { groups: entry.groups, groupNames: entry.groupNames || {} };
+    const prefix = `groups-${this.format(entry.date).replace(/[\/\s:]/g, '')}`;
+    if (format === 'json') { ExportUtil.toJSON(arrangement, prefix); Toast.show('JSONを書き出しました'); }
+    else if (format === 'jpeg') { Toast.show('JPEGを作成中...', 2500); ExportUtil.toImage(arrangement, prefix, 'jpeg').then(() => Toast.show('JPEGを書き出しました')); }
+    else if (format === 'pdf') { Toast.show('PDFを作成中...', 2500); ExportUtil.toPDF(arrangement, prefix).then(() => Toast.show('PDFを書き出しました')); }
   },
 
   render() {
@@ -66,10 +78,35 @@ const History = {
         e.stopPropagation();
         if (!confirm('現在の配置をこの履歴で上書きします。よろしいですか？')) return;
         Groups.restoreFromHistory(entry);
-        // switch tab back to groups
         document.querySelector('.tab-btn[data-tab="groups"]').click();
         Toast.show('復元しました');
       });
+
+      // export dropdown
+      const dd = document.createElement('div');
+      dd.className = 'dropdown';
+      const trig = document.createElement('button');
+      trig.className = 'ghost';
+      trig.textContent = '📤 書き出し ▾';
+      trig.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('#history .dropdown.open').forEach(d => { if (d !== dd) d.classList.remove('open'); });
+        dd.classList.toggle('open');
+      });
+      const menu = document.createElement('div');
+      menu.className = 'dropdown-menu';
+      ['json', 'jpeg', 'pdf'].forEach(fmt => {
+        const b = document.createElement('button');
+        b.textContent = fmt.toUpperCase();
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          dd.classList.remove('open');
+          this.exportEntry(entry, fmt);
+        });
+        menu.appendChild(b);
+      });
+      dd.appendChild(trig);
+      dd.appendChild(menu);
 
       const delBtn = document.createElement('button');
       delBtn.className = 'ghost danger';
@@ -81,6 +118,7 @@ const History = {
       });
 
       actions.appendChild(restoreBtn);
+      actions.appendChild(dd);
       actions.appendChild(delBtn);
 
       head.appendChild(left);
@@ -104,7 +142,3 @@ const History = {
     }
   },
 };
-
-function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}

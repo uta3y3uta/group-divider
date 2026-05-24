@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   Settings.init();
+  Rules.init();
   Groups.init();
   History.init();
 

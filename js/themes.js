@@ -1,20 +1,20 @@
 const THEMES = [
   {
-    id: 'orange', name: 'オレンジ', emoji: '🍊',
-    vars: {
-      '--bg-1': '#fff7f0', '--bg-2': '#ffe9d6',
-      '--card': '#ffffff', '--text': '#2d2d3a', '--muted': '#8a8a9a',
-      '--border': '#ffe0c2', '--primary': '#ff7a59', '--primary-hover': '#ff6342',
-      '--secondary': '#6366f1', '--accent': '#fbbf24',
-    },
-  },
-  {
     id: 'sky', name: 'スカイ', emoji: '☁️',
     vars: {
       '--bg-1': '#eff6ff', '--bg-2': '#dbeafe',
       '--card': '#ffffff', '--text': '#1e293b', '--muted': '#64748b',
       '--border': '#bfdbfe', '--primary': '#3b82f6', '--primary-hover': '#2563eb',
       '--secondary': '#8b5cf6', '--accent': '#06b6d4',
+    },
+  },
+  {
+    id: 'orange', name: 'オレンジ', emoji: '🍊',
+    vars: {
+      '--bg-1': '#fff7f0', '--bg-2': '#ffe9d6',
+      '--card': '#ffffff', '--text': '#2d2d3a', '--muted': '#8a8a9a',
+      '--border': '#ffe0c2', '--primary': '#ff7a59', '--primary-hover': '#ff6342',
+      '--secondary': '#6366f1', '--accent': '#fbbf24',
     },
   },
   {
