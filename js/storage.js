@@ -1,13 +1,19 @@
 const Storage = {
   KEY_MEMBERS: 'gd_members',
   KEY_LAST: 'gd_last_groups',
+  KEY_GROUP_NAMES: 'gd_group_names',
+  KEY_LAYOUT: 'gd_layout',
 
   loadMembers() {
     try {
       const raw = localStorage.getItem(this.KEY_MEMBERS);
       if (!raw) return [];
       const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
+      if (!Array.isArray(arr)) return [];
+      // Normalize: ensure id + name; drop legacy fields silently
+      return arr
+        .filter(m => m && typeof m.name === 'string' && m.name.trim())
+        .map(m => ({ id: m.id || uid(), name: m.name }));
     } catch (e) {
       return [];
     }
@@ -30,6 +36,29 @@ const Storage = {
   saveLastGroups(groups) {
     const simplified = groups.map(g => g.map(m => m.id));
     localStorage.setItem(this.KEY_LAST, JSON.stringify(simplified));
+  },
+
+  loadGroupNames() {
+    try {
+      const raw = localStorage.getItem(this.KEY_GROUP_NAMES);
+      if (!raw) return {};
+      const obj = JSON.parse(raw);
+      return obj && typeof obj === 'object' ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  saveGroupNames(map) {
+    localStorage.setItem(this.KEY_GROUP_NAMES, JSON.stringify(map));
+  },
+
+  loadLayout() {
+    return localStorage.getItem(this.KEY_LAYOUT) || 'vertical';
+  },
+
+  saveLayout(layout) {
+    localStorage.setItem(this.KEY_LAYOUT, layout);
   },
 };
 

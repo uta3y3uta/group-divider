@@ -3,127 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>グループ分けアプリ</title>
+<title>グループ分け</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header>
-  <h1>グループ分け</h1>
+  <h1>👥 グループ分け</h1>
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="setup">初期設定</button>
-    <button class="tab-btn" data-tab="random">ランダム</button>
-    <button class="tab-btn" data-tab="manual">手動</button>
+    <button class="tab-btn active" data-tab="groups">🎲 グループ分け</button>
+    <button class="tab-btn" data-tab="setup">⚙️ 初期設定</button>
   </nav>
 </header>
 
 <main>
-  <!-- ============ 初期設定 ============ -->
-  <section id="setup" class="tab-panel active">
-    <div class="card">
-      <h2>メンバー登録</h2>
-      <p class="hint">名前を1行ずつ入力してください。「性別」「タグ」は任意です。</p>
-
-      <div class="member-add">
-        <input type="text" id="member-name" placeholder="名前" />
-        <select id="member-gender">
-          <option value="">性別なし</option>
-          <option value="M">男</option>
-          <option value="F">女</option>
-        </select>
-        <input type="text" id="member-tag" placeholder="タグ（任意）" />
-        <button id="add-member-btn" class="primary">追加</button>
+  <!-- ============ グループ分け ============ -->
+  <section id="groups" class="tab-panel active">
+    <div class="card pop">
+      <div class="control-row">
+        <div class="control-block">
+          <label class="control-label">分け方</label>
+          <div class="seg">
+            <button class="seg-btn active" data-mode="by-groups">グループ数</button>
+            <button class="seg-btn" data-mode="by-size">人数で</button>
+          </div>
+        </div>
+        <div class="control-block" id="by-groups-block">
+          <label class="control-label">グループ数</label>
+          <div class="stepper">
+            <button class="step-btn" data-step="group-count" data-delta="-1">−</button>
+            <input type="number" id="group-count" min="1" value="4">
+            <button class="step-btn" data-step="group-count" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="control-block hidden" id="by-size-block">
+          <label class="control-label">1グループの人数</label>
+          <div class="stepper">
+            <button class="step-btn" data-step="group-size" data-delta="-1">−</button>
+            <input type="number" id="group-size" min="2" value="4">
+            <button class="step-btn" data-step="group-size" data-delta="1">+</button>
+          </div>
+          <div class="size-presets">
+            <button class="preset-btn" data-size="2">ペア</button>
+            <button class="preset-btn" data-size="3">3人</button>
+            <button class="preset-btn" data-size="4">4人</button>
+            <button class="preset-btn" data-size="5">5人</button>
+            <button class="preset-btn" data-size="6">6人</button>
+          </div>
+        </div>
       </div>
 
-      <div class="bulk-add">
-        <details>
-          <summary>まとめて追加</summary>
-          <textarea id="bulk-text" rows="6" placeholder="1行に1人&#10;例：&#10;田中,M&#10;佐藤,F&#10;鈴木"></textarea>
-          <button id="bulk-add-btn">まとめて追加</button>
-        </details>
+      <div class="control-row">
+        <label class="check-pop">
+          <input type="checkbox" id="avoid-last">
+          <span>前回と違うメンバー</span>
+        </label>
+        <div class="layout-toggle" title="レイアウト切替">
+          <button class="layout-btn active" data-layout="vertical" aria-label="縦並び">
+            <span class="ico">⬍</span> 縦
+          </button>
+          <button class="layout-btn" data-layout="horizontal" aria-label="横並び">
+            <span class="ico">⬌</span> 横
+          </button>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button id="shuffle-btn" class="primary big bounce">🎲 シャッフル</button>
+        <button id="reset-btn" class="ghost">全員もどす</button>
+      </div>
+    </div>
+
+    <div class="card pop">
+      <div class="section-head">
+        <h3 class="sub">未配置 <span class="muted" id="pool-count">0</span></h3>
+        <span class="hint-sm">名前をドラッグでグループへ／真ん中タップで名前変更</span>
+      </div>
+      <div id="pool" class="pool dropzone" data-group="pool"></div>
+    </div>
+
+    <div class="card pop">
+      <h3 class="sub">グループ</h3>
+      <div id="groups-area" class="groups-area layout-vertical"></div>
+    </div>
+  </section>
+
+  <!-- ============ 初期設定 ============ -->
+  <section id="setup" class="tab-panel">
+    <div class="card pop">
+      <h2>👤 メンバー登録</h2>
+
+      <div class="sub-tabs">
+        <button class="sub-tab-btn active" data-subtab="paste">📋 コピペ</button>
+        <button class="sub-tab-btn" data-subtab="excel">📊 Excel</button>
+        <button class="sub-tab-btn" data-subtab="google">🔗 Google</button>
+      </div>
+
+      <!-- コピペ -->
+      <div class="sub-panel active" id="paste-panel">
+        <p class="hint">1行に1人ずつ名前を入力してください。</p>
+        <textarea id="paste-text" rows="8" placeholder="田中&#10;佐藤&#10;鈴木&#10;..."></textarea>
+        <div class="sub-actions">
+          <label class="check-pop">
+            <input type="checkbox" id="paste-append">
+            <span>既存に追加（オフ=置き換え）</span>
+          </label>
+          <button id="paste-import-btn" class="primary">取り込む</button>
+        </div>
+      </div>
+
+      <!-- Excel -->
+      <div class="sub-panel" id="excel-panel">
+        <p class="hint">Excelファイル(.xlsx/.csv)を選択してください。<br>または、Excelのセルを選択→コピー→上の「コピペ」タブに貼り付けでもOKです。</p>
+        <div class="file-drop" id="excel-drop">
+          <input type="file" id="excel-file" accept=".xlsx,.xls,.csv">
+          <div class="file-drop-hint">📁 ファイルを選択 または ここにドロップ</div>
+          <div id="excel-status" class="file-status"></div>
+        </div>
+        <div class="sub-actions">
+          <label class="check-pop">
+            <input type="checkbox" id="excel-append">
+            <span>既存に追加（オフ=置き換え）</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Google -->
+      <div class="sub-panel" id="google-panel">
+        <p class="hint">Googleスプレッドシートの共有URLを貼り付けてください。<br>※ シートを「リンクを知っている全員」で共有しておく必要があります。</p>
+        <input type="text" id="google-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+        <div class="sub-actions">
+          <label class="check-pop">
+            <input type="checkbox" id="google-append">
+            <span>既存に追加（オフ=置き換え）</span>
+          </label>
+          <button id="google-import-btn" class="primary">取り込む</button>
+        </div>
+        <div id="google-status" class="file-status"></div>
+      </div>
+
+      <hr class="soft">
+
+      <div class="member-header">
+        <h3 class="sub">登録済み <span class="muted" id="member-count">0</span> 人</h3>
+        <button id="clear-members-btn" class="ghost danger">全員削除</button>
+      </div>
+
+      <div class="add-one">
+        <input type="text" id="member-name" placeholder="1人追加">
+        <button id="add-member-btn" class="primary">＋</button>
       </div>
 
       <ul id="member-list" class="member-list"></ul>
-
-      <div class="setup-actions">
-        <button id="clear-members-btn" class="danger">全員削除</button>
-        <span class="count">登録: <span id="member-count">0</span> 人</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ ランダム ============ -->
-  <section id="random" class="tab-panel">
-    <div class="card">
-      <h2>ランダムで分ける</h2>
-
-      <div class="row">
-        <label>分け方</label>
-        <div class="seg">
-          <button class="seg-btn active" data-mode="by-groups">班数で指定</button>
-          <button class="seg-btn" data-mode="by-size">1班の人数で指定</button>
-        </div>
-      </div>
-
-      <div class="row" id="by-groups-row">
-        <label>班の数</label>
-        <input type="number" id="group-count" min="1" value="4" />
-      </div>
-
-      <div class="row hidden" id="by-size-row">
-        <label>1班の人数</label>
-        <input type="number" id="group-size" min="2" value="4" />
-      </div>
-
-      <div class="row">
-        <label>条件</label>
-        <div class="cond">
-          <label><input type="checkbox" id="mix-gender"> 男女混合</label>
-          <label><input type="checkbox" id="avoid-last"> 前回と違うメンバー</label>
-        </div>
-      </div>
-
-      <div class="row">
-        <button id="shuffle-btn" class="primary big">分ける</button>
-      </div>
-
-      <div id="random-result" class="groups-area"></div>
-    </div>
-  </section>
-
-  <!-- ============ 手動 ============ -->
-  <section id="manual" class="tab-panel">
-    <div class="card">
-      <h2>手動で分ける</h2>
-      <p class="hint">名前カードをドラッグして班に入れてください。スマホは長押し→ドラッグ。</p>
-
-      <div class="row">
-        <label>班の数</label>
-        <input type="number" id="manual-group-count" min="1" value="4" />
-        <button id="manual-rebuild-btn">作り直す</button>
-      </div>
-
-      <div class="row">
-        <button id="manual-reset-btn">未配置に戻す</button>
-        <button id="manual-auto-fill-btn" class="primary">空いてる班に均等配置</button>
-      </div>
-
-      <h3 class="sub">未配置</h3>
-      <div id="pool" class="pool dropzone" data-group="pool"></div>
-
-      <h3 class="sub">班</h3>
-      <div id="manual-groups" class="groups-area"></div>
     </div>
   </section>
 </main>
 
 <footer>
-  <small>データはこのブラウザ内（LocalStorage）に保存されます。</small>
+  <small>💾 データはこのブラウザ内に保存されます</small>
 </footer>
 
+<!-- SheetJS for Excel parsing (CDN, async to avoid blocking initial render) -->
+<script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/setup.js"></script>
-<script src="js/random.js"></script>
-<script src="js/manual.js"></script>
+<script src="js/groups.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
